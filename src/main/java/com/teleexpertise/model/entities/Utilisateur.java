@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "utilisateur")
 @Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "role", discriminatorType = DiscriminatorType.STRING) // CRUCIAL POUR L'HÉRITAGE
 public abstract class Utilisateur {
 
     @Id
@@ -24,6 +25,7 @@ public abstract class Utilisateur {
     protected String motDePasseHache;
 
     @Enumerated(EnumType.STRING)
+    @Column(insertable = false, updatable = false)
     protected RoleEnum role;
 
     // Constructeur par défaut requis par JPA

@@ -6,6 +6,7 @@ import java.util.List;
 @Entity
 @Table(name = "medecin_generaliste")
 @PrimaryKeyJoinColumn(name = "id")
+@DiscriminatorValue("GENERALISTE")
 public class MedecinGeneraliste extends Utilisateur {
 
     @OneToMany(mappedBy = "generaliste", fetch = FetchType.LAZY)

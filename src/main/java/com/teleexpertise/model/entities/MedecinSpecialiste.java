@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "medecin_specialiste")
 @PrimaryKeyJoinColumn(name = "id")
+@DiscriminatorValue("SPECIALISTE")
 public class MedecinSpecialiste extends Utilisateur {
 
     @Enumerated(EnumType.STRING)
