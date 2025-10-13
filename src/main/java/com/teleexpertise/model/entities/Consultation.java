@@ -56,6 +56,30 @@ public class Consultation {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
+    public Patient getPatient() { return patient; }
+    public void setPatient(Patient patient) { this.patient = patient; } // RÉSOUD setPatient
+
     public MedecinGeneraliste getGeneraliste() { return generaliste; }
     public void setGeneraliste(MedecinGeneraliste generaliste) { this.generaliste = generaliste; }
+
+    public String getMotif() { return motif; }
+    public void setMotif(String motif) { this.motif = motif; } // RÉSOUD setMotif
+
+    public String getObservations() { return observations; }
+    public void setObservations(String observations) { this.observations = observations; } // RÉSOUD setObservations
+
+    public String getDiagnostic() { return diagnostic; }
+    public void setDiagnostic(String diagnostic) { this.diagnostic = diagnostic; } // RÉSOUD setDiagnostic
+
+    public String getPrescription() { return prescription; }
+    public void setPrescription(String prescription) { this.prescription = prescription; } // RÉSOUD setPrescription
+
+    public ConsultationStatutEnum getStatut() { return statut; }
+    public void setStatut(ConsultationStatutEnum statut) { this.statut = statut; } // RÉSOUD setStatut
+
+    public List<ActeTechnique> getActes() { return actes; }
+    public void setActes(List<ActeTechnique> actes) { this.actes = actes; } // RÉSOUD setActes
+
+    public double getCoutTotal() { return coutTotal; }
+    public void setCoutTotal(double coutTotal) { this.coutTotal = coutTotal; }
 }
