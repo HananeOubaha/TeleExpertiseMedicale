@@ -17,8 +17,8 @@
 <c:if test="${not empty requestScope.error}"><p style="color: red;">Erreur: ${requestScope.error}</p></c:if>
 
 <form method="POST" action="${pageContext.request.contextPath}/generaliste/creer_consultation">
-    <input type="hidden" name="patientId" value="${patient.id}">
     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}" />
+    <input type="hidden" name="patientId" value="${patient.id}">
 
     <h2>1. Observations Générales</h2>
     <label for="motif">Motif de Consultation (Ce que dit le patient):</label><br>
