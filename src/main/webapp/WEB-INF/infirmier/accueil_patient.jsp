@@ -18,6 +18,7 @@
 
 <h2>1. Recherche du Patient</h2>
 <form method="POST" action="${pageContext.request.contextPath}/infirmier/accueil">
+    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}" />
     <input type="hidden" name="action" value="search">
     <label for="numSecuSearch">Numéro de Sécurité Sociale:</label>
     <input type="text" id="numSecuSearch" name="numSecu" required value="${not empty requestScope.numSecu ? requestScope.numSecu : ''}">

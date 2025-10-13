@@ -37,6 +37,8 @@ public class Patient {
     // Relations: Un patient a plusieurs mesures de signes vitaux
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<SignesVitaux> signesVitauxList = new ArrayList<>();
+    @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY)
+    private List<Consultation> consultations;
 
     // Constructeur par défaut requis par JPA
     public Patient() {

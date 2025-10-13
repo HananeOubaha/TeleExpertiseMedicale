@@ -9,9 +9,9 @@
 <h1>Bienvenue, Médecin Généraliste !</h1>
 <p>Authentification réussie en tant que : <%= session.getAttribute("utilisateurRole") %></p>
 
-<a href="liste_patients">Voir la file d'attente (US1 & US2 TICKET-001)</a>
+<a href="${pageContext.request.contextPath}/generaliste/liste_patients">Voir la file d'attente (US-GEN-1)</a>
 
 <br><br>
-<a href="logout">Se Déconnecter</a>
+<a href="${pageContext.request.contextPath}/logout">Se Déconnecter</a>
 </body>
 </html>

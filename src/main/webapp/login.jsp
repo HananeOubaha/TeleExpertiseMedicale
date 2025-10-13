@@ -1,7 +1,7 @@
 <%-- dans src/main/webapp/login.jsp --%>
 <form method="POST" action="doLogin">
 
-    <%-- (Votre champ CSRF sera ajouté ici) --%>
+    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}" />
 
     <div>
         <label for="email">Email :</label>
