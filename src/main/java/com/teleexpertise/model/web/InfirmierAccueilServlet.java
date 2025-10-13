@@ -20,6 +20,10 @@ public class InfirmierAccueilServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        // Initialisation de JPA forcée pour garantir que la Factory est ouverte
+        // (Bien que le ContextListener doive le faire, ceci renforce la stabilité)
+        com.teleexpertise.dao.JpaUtil.getEntityManagerFactory();
+
         // (Sécurité simple - sera améliorée avec un Filter)
         if (!RoleEnum.INFIRMIER.equals(request.getSession().getAttribute("utilisateurRole"))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Accès réservé à l'Infirmier.");
@@ -37,19 +41,20 @@ public class InfirmierAccueilServlet extends HttpServlet {
         String action = request.getParameter("action");
         String numSecu = request.getParameter("numSecu");
 
-        // 🚨 VÉRIFICATION DE SÉCURITÉ CRITIQUE : Bloquer les chaînes vides 🚨
+        // IMPORTANT : Définir patient à null pour le cas où la recherche échoue
+        Patient patient = null;
+
+        // VÉRIFICATION DE SÉCURITÉ CRITIQUE
         if (numSecu == null || numSecu.trim().isEmpty()) {
             request.setAttribute("error", "Le Numéro de Sécurité Sociale est obligatoire.");
             request.getRequestDispatcher("/WEB-INF/infirmier/accueil_patient.jsp").forward(request, response);
             return;
         }
 
-        Patient patient = null;
-
         try {
             if ("search".equals(action)) {
                 // US1 - Recherche
-                patient = infirmierService.rechercherPatient(numSecu.trim()); // Utiliser trim() pour nettoyer
+                patient = infirmierService.rechercherPatient(numSecu.trim());
 
                 if (patient != null) {
                     request.setAttribute("patient", patient);
@@ -64,13 +69,11 @@ public class InfirmierAccueilServlet extends HttpServlet {
 
                 String existingId = request.getParameter("patientId");
 
-                // 1. Récupérer ou créer l'entité Patient
                 if (existingId != null && !existingId.isEmpty()) {
-                    // Cas 1: Patient existant (recherché par le formulaire précédent)
+                    // Cas 1: Patient existant (recherche par Secu pour s'assurer que c'est bien le patient)
                     patient = infirmierService.rechercherPatient(numSecu.trim());
-                    // Vérification de sécurité supplémentaire (très important !)
                     if (patient == null) {
-                        throw new RuntimeException("Patient introuvable pour l'ID de mise à jour.");
+                        throw new RuntimeException("Erreur de session: Patient introuvable pour mise à jour.");
                     }
                 } else {
                     // Cas 2: Nouveau patient
@@ -78,9 +81,10 @@ public class InfirmierAccueilServlet extends HttpServlet {
                     patient.setNom(request.getParameter("nom"));
                     patient.setPrenom(request.getParameter("prenom"));
                     patient.setDateNaissance(request.getParameter("dateNaissance"));
-                    patient.setNumSecuriteSociale(numSecu.trim()); // Sauvegarde la valeur nettoyée
+                    patient.setNumSecuriteSociale(numSecu.trim());
                     patient.setTelephone(request.getParameter("telephone"));
                     patient.setAdresse(request.getParameter("adresse"));
+                    // Note: Pas besoin de vérifier l'unicité ici, le DAO le fera et lancera une exception si besoin.
                 }
 
                 // 2. Création et liaison des Signes Vitaux
@@ -92,7 +96,7 @@ public class InfirmierAccueilServlet extends HttpServlet {
                 sv.setPoids(parseDouble(request.getParameter("poids")));
                 sv.setTaille(parseDouble(request.getParameter("taille")));
 
-                // 3. Sauvegarde (persiste Patient et Signes Vitaux)
+                // 3. Sauvegarde
                 patient = infirmierService.accueillirPatient(patient, sv);
 
                 // Redirection vers la liste d'attente (US2)
@@ -100,8 +104,8 @@ public class InfirmierAccueilServlet extends HttpServlet {
                 return;
             }
         } catch (Exception e) {
-            // En cas d'erreur de base de données (comme une contrainte d'unicité)
-            request.setAttribute("error", "Erreur d'enregistrement : " + e.getMessage());
+            // Afficher l'erreur et revenir au formulaire
+            request.setAttribute("error", "Erreur critique : " + e.getMessage());
             e.printStackTrace();
         }
 

@@ -2,7 +2,9 @@ package com.teleexpertise.model.entities;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -28,11 +30,11 @@ public class Patient {
     private String telephone;
     private String adresse;
 
+    // Le champ privé doit rester en LocalDateTime pour la persistance JPA
     @Column(name = "date_arrivee", nullable = false)
     private LocalDateTime dateArrivee;
 
     // Relations: Un patient a plusieurs mesures de signes vitaux
-    // CascadeType.ALL signifie que si le Patient est supprimé, ses SignesVitaux le sont aussi.
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<SignesVitaux> signesVitauxList = new ArrayList<>();
 
@@ -41,7 +43,27 @@ public class Patient {
         this.dateArrivee = LocalDateTime.now();
     }
 
-    // --- Getters et Setters ---
+    // --- Getters et Setters (Simples) ---
+
+    // Le Getter de base, MODIFIÉ pour retourner java.util.Date pour JSTL
+    // Hibernate utilise cette méthode comme getter principal.
+    public Date getDateArrivee() {
+        if (this.dateArrivee == null) {
+            return null;
+        }
+        return Date.from(this.dateArrivee.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    // Le Setter doit rester en LocalDateTime pour insérer dans la DB
+    public void setDateArrivee(LocalDateTime dateArrivee) {
+        this.dateArrivee = dateArrivee;
+    }
+
+    // Méthode pour obtenir le LocalDateTime si nécessaire pour Java (non utilisée en JSP)
+    public LocalDateTime getDateArriveeAsLocalDateTime() {
+        return this.dateArrivee;
+    }
+
 
     public Long getId() {
         return id;
@@ -99,14 +121,6 @@ public class Patient {
         this.adresse = adresse;
     }
 
-    public LocalDateTime getDateArrivee() {
-        return dateArrivee;
-    }
-
-    public void setDateArrivee(LocalDateTime dateArrivee) {
-        this.dateArrivee = dateArrivee;
-    }
-
     public List<SignesVitaux> getSignesVitauxList() {
         return signesVitauxList;
     }
@@ -117,6 +131,9 @@ public class Patient {
 
     // Méthode utilitaire pour ajouter un signe vital
     public void addSignesVitaux(SignesVitaux sv) {
+        if (sv == null) {
+            throw new IllegalArgumentException("Signes Vitaux ne peuvent pas être null.");
+        }
         this.signesVitauxList.add(sv);
         sv.setPatient(this);
     }

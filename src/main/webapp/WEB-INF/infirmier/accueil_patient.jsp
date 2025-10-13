@@ -26,43 +26,52 @@
 
 <hr>
 
-<h2>2. Enregistrement / Saisie des Signes Vitaux</h2>
+<c:if test="${not empty patient.id || not empty requestScope.numSecu || not empty requestScope.error}">
+    <h2>2. Enregistrement / Saisie des Signes Vitaux</h2>
 
-<form method="POST" action="${pageContext.request.contextPath}/infirmier/accueil">
-    <input type="hidden" name="action" value="save">
+    <form method="POST" action="${pageContext.request.contextPath}/infirmier/accueil">
+        <input type="hidden" name="action" value="save">
+        <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}" />
 
-    <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}" />
+        <input type="hidden" name="patientId" value="${patient.id}">
 
-    <input type="hidden" name="patientId" value="${patient.id}">
-    <input type="hidden" name="numSecu" value="${patient.numSecuriteSociale}">
+        <c:choose>
+            <c:when test="${patient.id == null}">
+                <h3>Nouveau Patient (Entrée des données complètes)</h3>
 
+                <label>Nom:</label><input type="text" name="nom" required><br>
+                <label>Prénom:</label><input type="text" name="prenom" required><br>
+                <label>Date Naissance:</label><input type="date" name="dateNaissance"><br>
 
-    <c:choose>
-        <c:when test="${patient.id == null}">
-            <h3>Nouveau Patient (Entrée des données complètes)</h3>
-            <label>Nom:</label><input type="text" name="nom" required><br>
-            <label>Prénom:</label><input type="text" name="prenom" required><br>
-            <label>Date Naissance:</label><input type="date" name="dateNaissance"><br>
-            <label>Num Sécu:</label><input type="text" name="numSecu" required value="${requestScope.numSecu}"><br>
-        </c:when>
-        <c:otherwise>
-            <h3>Patient Existant: ${patient.nom} ${patient.prenom} (NS: ${patient.numSecuriteSociale})</h3>
-            <p>Anciens SV enregistrés: ${patient.signesVitauxList.size()}</p>
-        </c:otherwise>
-    </c:choose>
+                <label>Num Sécu:</label>
+                <input type="text" name="numSecu" required value="${requestScope.numSecu}"><br>
 
-    <hr>
+            </c:when>
+            <c:otherwise>
+                <h3>Patient Existant: ${patient.nom} ${patient.prenom} (NS: ${patient.numSecuriteSociale})</h3>
+                <p>Anciens SV enregistrés: ${patient.signesVitauxList.size()}</p>
 
-    <h3>Signes Vitaux (Nouveaux)</h3>
-    <label>Tension Artérielle (mmHg):</label><input type="text" name="tension" required><br>
-    <label>Fréquence Cardiaque (bpm):</label><input type="number" name="fc" required><br>
-    <label>Température (°C):</label><input type="text" name="temp" required><br>
-    <label>Fréquence Respiratoire (cycles/min):</label><input type="number" name="fr" required><br>
-    <label>Poids (kg):</label><input type="text" name="poids"><br>
-    <label>Taille (cm):</label><input type="text" name="taille"><br>
+                <input type="hidden" name="numSecu" value="${patient.numSecuriteSociale}">
+            </c:otherwise>
+        </c:choose>
 
-    <button type="submit">Enregistrer et Mettre en File d'Attente</button>
-</form>
+        <hr>
+
+        <h3>Signes Vitaux (Nouveaux)</h3>
+        <label>Tension Artérielle (mmHg):</label><input type="text" name="tension" required><br>
+        <label>Fréquence Cardiaque (bpm):</label><input type="number" name="fc" required><br>
+        <label>Température (°C):</label><input type="text" name="temp" required><br>
+        <label>Fréquence Respiratoire (cycles/min):</label><input type="number" name="fr" required><br>
+        <label>Poids (kg):</label><input type="text" name="poids"><br>
+        <label>Taille (cm):</label><input type="text" name="taille"><br>
+
+        <button type="submit">Enregistrer et Mettre en File d'Attente</button>
+    </form>
+</c:if>
+
+<c:if test="${empty patient.id && empty requestScope.numSecu && empty requestScope.error}">
+    <p>Veuillez rechercher un patient par son numéro de sécurité sociale pour continuer.</p>
+</c:if>
 
 </body>
 </html>

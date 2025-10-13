@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import com.teleexpertise.dao.JpaUtil;
+import java.util.List;
 
 public class PatientDao {
 
@@ -18,8 +19,9 @@ public class PatientDao {
         Patient patient = null;
 
         try {
+            // CORRECTION CRITIQUE : Utilisation de LEFT JOIN FETCH pour charger la collection LAZY
             TypedQuery<Patient> query = em.createQuery(
-                    "SELECT p FROM Patient p WHERE p.numSecuriteSociale = :numSecu", Patient.class);
+                    "SELECT p FROM Patient p LEFT JOIN FETCH p.signesVitauxList WHERE p.numSecuriteSociale = :numSecu", Patient.class);
             query.setParameter("numSecu", numSecu);
 
             patient = query.getSingleResult();
@@ -56,5 +58,24 @@ public class PatientDao {
             em.close();
         }
         return patient;
+    }
+    public List<Patient> findAllOrderByArrivalTime() {
+        EntityManager em = JpaUtil.getEntityManagerFactory().createEntityManager();
+        List<Patient> patients = null;
+
+        try {
+            // La requête JPQL avec EAGER FETCH (correction du Lazy loading)
+            TypedQuery<Patient> query = em.createQuery(
+                    "SELECT p FROM Patient p LEFT JOIN FETCH p.signesVitauxList ORDER BY p.dateArrivee ASC", Patient.class);
+
+            // CORRECTION : L'appel de getResultList() est bien sur la requête
+            patients = query.getResultList();
+
+        } catch (Exception e) {
+            System.err.println("Erreur DAO lors de la récupération de la liste des patients : " + e.getMessage());
+        } finally {
+            em.close();
+        }
+        return patients;
     }
 }
