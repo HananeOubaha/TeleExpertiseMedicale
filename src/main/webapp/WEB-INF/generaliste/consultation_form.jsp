@@ -10,10 +10,16 @@
             <c:otherwise>Démarrer Nouvelle Consultation</c:otherwise>
         </c:choose>
     </title>
+    <style>
+        .acte-list { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
+        .acte-list div { margin-bottom: 5px; }
+        textarea, input[type="text"] { width: 100%; box-sizing: border-box; }
+    </style>
 </head>
 <body>
 <c:set var="patient" value="${requestScope.patient}" />
-<c:set var="consultation" value="${requestScope.consultation}" /> <%-- L'objet Consultation (Peut être null) --%>
+<c:set var="consultation" value="${requestScope.consultation}" />
+<c:set var="actesDisponibles" value="${requestScope.actesDisponibles}" />
 
 <h1>
     Consultation pour ${patient.nom} ${patient.prenom}
@@ -44,7 +50,30 @@
     <textarea id="observations" name="observations" rows="5" required>${consultation.observations}</textarea><br><br>
 
     <h2>2. Actes Techniques & Examens Complémentaires</h2>
-    <p>Ajouter des actes (Radiographie, Analyse de sang, etc.) - Sera implémenté dans un formulaire dédié.</p>
+    <div class="acte-list">
+        <c:forEach var="acte" items="${actesDisponibles}">
+            <div>
+                <input type="checkbox"
+                       id="acte${acte.id}"
+                       name="actes"
+                       value="${acte.id}"
+
+                    <%-- Logique pour cocher si l'acte est déjà dans la liste de la consultation --%>
+                <c:if test="${not empty consultation.actes}">
+                <c:forEach var="consActe" items="${consultation.actes}">
+                       <c:if test="${consActe.id == acte.id}">checked</c:if>
+                </c:forEach>
+                </c:if>
+                >
+                <label for="acte${acte.id}">
+                        ${acte.nom} (Coût: ${acte.cout} DH)
+                </label>
+            </div>
+        </c:forEach>
+    </div>
+    <p>
+        **Note:** La consultation de base est de **150 DH**. Le coût total sera calculé à la clôture (US4).
+    </p>
 
     <hr>
 

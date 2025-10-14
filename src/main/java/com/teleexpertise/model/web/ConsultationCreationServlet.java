@@ -6,6 +6,8 @@ import com.teleexpertise.model.entities.MedecinGeneraliste;
 import com.teleexpertise.model.entities.Patient;
 import com.teleexpertise.model.enums.ConsultationStatutEnum;
 import com.teleexpertise.model.enums.RoleEnum;
+import com.teleexpertise.model.dao.ActeTechniqueDao;
+import com.teleexpertise.model.service.GeneralisteService;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,11 +19,19 @@ import java.io.IOException;
 import java.util.Collections;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import com.teleexpertise.model.entities.ActeTechnique;
 
 @WebServlet("/generaliste/creer_consultation")
 public class ConsultationCreationServlet extends HttpServlet {
 
     private final ConsultationDao consultationDao = new ConsultationDao();
+    // Ces deux services/dao devront être ajoutés pour que le code compile
+    private final ActeTechniqueDao acteTechniqueDao = new ActeTechniqueDao();
+    private final GeneralisteService generalisteService = new GeneralisteService();
+
 
     // GET : Affichage du formulaire (Création ou Edition)
     @Override
@@ -63,6 +73,10 @@ public class ConsultationCreationServlet extends HttpServlet {
                 return;
             }
 
+            // CHARGEMENT DE LA LISTE DES ACTES POUR LA JSP
+            List<ActeTechnique> actesDisponibles = acteTechniqueDao.findAll();
+
+
             // Passer l'erreur possiblement envoyée par le POST raté
             String errorMsg = request.getParameter("error");
             if (errorMsg != null) {
@@ -72,6 +86,7 @@ public class ConsultationCreationServlet extends HttpServlet {
             // Passage des objets à la JSP
             request.setAttribute("patient", patient);
             request.setAttribute("consultation", consultation);
+            request.setAttribute("actesDisponibles", actesDisponibles); // PASSAGE DE LA LISTE
 
             request.getRequestDispatcher("/WEB-INF/generaliste/consultation_form.jsp").forward(request, response);
 
@@ -123,33 +138,51 @@ public class ConsultationCreationServlet extends HttpServlet {
                 consultation.setPatient(patient);
                 consultation.setGeneraliste(generaliste);
             }
-            // IMPORTANT : NE PAS FERMER EM ICI si les entités doivent être utilisées.
-            // Le DAO ouvrira et fermera sa propre transaction.
             em.close();
 
+            // 2. Récupération et MAJ des données du formulaire
+            String[] actesIds = request.getParameterValues("actes");
+            List<ActeTechnique> actesSelectionnes = null;
 
-            // 2. Mettre à jour les données du formulaire
+            if (actesIds != null) {
+                // Utilisation de Stream API pour récupérer les entités ActeTechnique complètes
+                actesSelectionnes = Arrays.stream(actesIds)
+                        .map(Long::parseLong)
+                        .map(acteId -> {
+                            // Nécessite un findById simple (pas de service ici pour éviter un nouveau EM)
+                            EntityManager tempEm = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+                            ActeTechnique acte = tempEm.find(ActeTechnique.class, acteId);
+                            tempEm.close();
+                            return acte;
+                        })
+                        .filter(acte -> acte != null)
+                        .collect(Collectors.toList());
+            }
+
+
             consultation.setMotif(request.getParameter("motif"));
             consultation.setObservations(request.getParameter("observations"));
-            consultation.setActes(Collections.emptyList());
+            consultation.setActes(actesSelectionnes != null ? actesSelectionnes : Collections.emptyList());
+
 
             // 3. Gestion des Actions (Sauvegarde ou Clôture)
             if ("cloturer".equals(action)) {
-                // Scénario A: Clôture
+                // Scénario A: Clôture avec calcul de coût
                 consultation.setDiagnostic(request.getParameter("diagnostic"));
                 consultation.setPrescription(request.getParameter("prescription"));
-                consultation.setStatut(ConsultationStatutEnum.TERMINEE);
 
-                consultation = consultationDao.save(consultation); // Mise à jour de l'objet
+                // Utilisation du Service pour clôturer (calcul du coût et changement de statut)
+                generalisteService.cloturerConsultation(consultation);
+
                 response.sendRedirect(request.getContextPath() + "/generaliste/dashboard?message=Consultation clôturée (TERMINEE).");
                 return;
 
             } else if ("sauvegarder".equals(action)) {
                 // Sauvegarde simple (mode brouillon/édition)
                 consultation.setStatut(ConsultationStatutEnum.EN_COURS_DE_TRAITEMENT);
-                consultation = consultationDao.save(consultation); // Mise à jour de l'objet avec l'ID généré
+                consultation = consultationDao.save(consultation);
 
-                // CORRECTION : Redirection vers la même Servlet en mode ÉDITION
+                // Redirection vers la même Servlet en mode ÉDITION
                 response.sendRedirect(request.getContextPath() + "/generaliste/creer_consultation?consultationId=" + consultation.getId());
                 return;
             }
@@ -161,10 +194,8 @@ public class ConsultationCreationServlet extends HttpServlet {
 
             // Rediriger vers l'URL correcte en cas d'échec
             if (patientId != null) {
-                // Si on a l'ID patient, on retourne à la page de création/édition
                 response.sendRedirect(request.getContextPath() + "/generaliste/creer_consultation?patientId=" + patientId + "&error=" + encodedError);
             } else {
-                // Sinon, on retourne à la liste
                 response.sendRedirect(request.getContextPath() + "/generaliste/liste_patients?error=" + encodedError);
             }
             return;
