@@ -4,12 +4,24 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Créer Consultation - Généraliste</title>
+    <title>
+        <c:choose>
+            <c:when test="${not empty requestScope.consultation}">Éditer Consultation #${requestScope.consultation.id}</c:when>
+            <c:otherwise>Démarrer Nouvelle Consultation</c:otherwise>
+        </c:choose>
+    </title>
 </head>
 <body>
 <c:set var="patient" value="${requestScope.patient}" />
+<c:set var="consultation" value="${requestScope.consultation}" /> <%-- L'objet Consultation (Peut être null) --%>
 
-<h1>Démarrer Consultation pour ${patient.nom} ${patient.prenom}</h1>
+<h1>
+    Consultation pour ${patient.nom} ${patient.prenom}
+    <c:if test="${not empty consultation}">
+        (ID #${consultation.id} | Statut: ${consultation.statut})
+        <c:if test="${not empty requestScope.message}"><span style="color: green;"> - ${requestScope.message}</span></c:if>
+    </c:if>
+</h1>
 <p>N° Sécu: ${patient.numSecuriteSociale} | Arrivée: ${patient.dateArrivee}</p>
 
 <a href="${pageContext.request.contextPath}/generaliste/liste_patients">Retour à la File d'Attente</a>
@@ -20,12 +32,16 @@
     <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}" />
     <input type="hidden" name="patientId" value="${patient.id}">
 
+    <c:if test="${not empty consultation}">
+        <input type="hidden" name="consultationId" value="${consultation.id}">
+    </c:if>
+
     <h2>1. Observations Générales</h2>
     <label for="motif">Motif de Consultation (Ce que dit le patient):</label><br>
-    <textarea id="motif" name="motif" rows="3" required></textarea><br><br>
+    <textarea id="motif" name="motif" rows="3" required>${consultation.motif}</textarea><br><br>
 
     <label for="observations">Observations Cliniques (Examen physique):</label><br>
-    <textarea id="observations" name="observations" rows="5" required></textarea><br><br>
+    <textarea id="observations" name="observations" rows="5" required>${consultation.observations}</textarea><br><br>
 
     <h2>2. Actes Techniques & Examens Complémentaires</h2>
     <p>Ajouter des actes (Radiographie, Analyse de sang, etc.) - Sera implémenté dans un formulaire dédié.</p>
@@ -35,10 +51,10 @@
     <h2>3. Décision de Prise en Charge (Scénario A)</h2>
 
     <label for="diagnostic">Diagnostic établi (Si prise en charge directe):</label><br>
-    <input type="text" id="diagnostic" name="diagnostic"><br><br>
+    <input type="text" id="diagnostic" name="diagnostic" value="${consultation.diagnostic}"><br><br>
 
     <label for="prescription">Prescription / Traitement:</label><br>
-    <textarea id="prescription" name="prescription" rows="4"></textarea><br><br>
+    <textarea id="prescription" name="prescription" rows="4">${consultation.prescription}</textarea><br><br>
 
     <button type="submit" name="action" value="cloturer">Clôturer la Consultation (Scénario A)</button>
     <button type="submit" name="action" value="sauvegarder">Sauvegarder et Continuer (non clôturée)</button>

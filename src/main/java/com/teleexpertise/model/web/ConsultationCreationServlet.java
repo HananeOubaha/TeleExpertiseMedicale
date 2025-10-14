@@ -1,140 +1,173 @@
 package com.teleexpertise.model.web;
 
-import com.teleexpertise.model.dao.PatientDao;
-import com.teleexpertise.model.dao.UtilisateurDao;
-import com.teleexpertise.model.entities.Consultation;
-import com.teleexpertise.model.entities.Patient;
-import com.teleexpertise.model.entities.MedecinGeneraliste;
-import com.teleexpertise.model.entities.ActeTechnique;
 import com.teleexpertise.model.dao.ConsultationDao;
+import com.teleexpertise.model.entities.Consultation;
+import com.teleexpertise.model.entities.MedecinGeneraliste;
+import com.teleexpertise.model.entities.Patient;
 import com.teleexpertise.model.enums.ConsultationStatutEnum;
 import com.teleexpertise.model.enums.RoleEnum;
-// import com.teleexpertise.dao.JpaUtil;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
-import java.util.Collections; // Pour éviter les NullPointerException sur les listes vides
+import java.util.Collections;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @WebServlet("/generaliste/creer_consultation")
 public class ConsultationCreationServlet extends HttpServlet {
 
-    private final PatientDao patientDao = new PatientDao();
     private final ConsultationDao consultationDao = new ConsultationDao();
-    private final UtilisateurDao utilisateurDao = new UtilisateurDao(); // Pour charger le Généraliste
 
-    // GET : Affichage du formulaire initial
+    // GET : Affichage du formulaire (Création ou Edition)
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         HttpSession session = request.getSession();
 
-        // Sécurité: Vérifier le rôle
+        // 1. Sécurité: Vérifier le rôle
         if (!RoleEnum.GENERALISTE.equals(session.getAttribute("utilisateurRole"))) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Accès réservé au Généraliste.");
             return;
         }
 
-        try {
-            Long patientId = Long.parseLong(request.getParameter("patientId"));
+        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        Patient patient = null;
+        Consultation consultation = null;
 
-            // Chercher le patient pour afficher ses infos (Nécessite findById dans PatientDao ou EntityManager.find)
-            // Pour l'instant, on utilise une recherche simple (à adapter si besoin de lazy fetch)
-            EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
-            Patient patient = em.find(Patient.class, patientId);
-            em.close();
+        try {
+            String consultationIdParam = request.getParameter("consultationId");
+            String patientIdParam = request.getParameter("patientId");
+
+            if (consultationIdParam != null && !consultationIdParam.isEmpty()) {
+                // SCÉNARIO 1: ÉDITION d'une consultation existante
+                Long consultationId = Long.parseLong(consultationIdParam);
+                consultation = em.find(Consultation.class, consultationId);
+
+                if (consultation != null) {
+                    patient = consultation.getPatient();
+                }
+            } else if (patientIdParam != null && !patientIdParam.isEmpty()) {
+                // SCÉNARIO 2: CRÉATION d'une nouvelle consultation
+                Long patientId = Long.parseLong(patientIdParam);
+                patient = em.find(Patient.class, patientId);
+            }
 
             if (patient == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Patient introuvable.");
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Patient ou Consultation introuvable.");
                 return;
             }
 
-            // Charger la liste des Actes Techniques pour le formulaire (Nécessite ActeTechniqueDao)
-            // Pour le moment, nous allons simuler ou nécessiter un DAO ActeTechnique
+            // Passer l'erreur possiblement envoyée par le POST raté
+            String errorMsg = request.getParameter("error");
+            if (errorMsg != null) {
+                request.setAttribute("error", errorMsg);
+            }
 
+            // Passage des objets à la JSP
             request.setAttribute("patient", patient);
-            // La page de consultation sera la même pour la création et la gestion
+            request.setAttribute("consultation", consultation);
+
             request.getRequestDispatcher("/WEB-INF/generaliste/consultation_form.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID Patient invalide.");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID Patient/Consultation invalide.");
         } catch (Exception e) {
             request.setAttribute("error", "Erreur lors du chargement: " + e.getMessage());
+            e.printStackTrace();
             request.getRequestDispatcher("/WEB-INF/generaliste/liste_patients_gen.jsp").forward(request, response);
+        } finally {
+            if (em != null && em.isOpen()) em.close();
         }
     }
 
-    // POST : Traitement du formulaire (Création ou Clôture Scénario A)
+    // POST : Traitement du formulaire (Création, Sauvegarde ou Clôture)
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Sécurité CSRF et Rôle déjà gérés par les filtres (à implémenter)
+        String patientIdParam = request.getParameter("patientId");
+        Long patientId = null;
 
         try {
-            Long patientId = Long.parseLong(request.getParameter("patientId"));
-            Long generalisteId = (Long) request.getSession().getAttribute("utilisateurId");
-            String action = request.getParameter("action"); // 'save' ou 'cloturer'
-
-            // 1. Charger les entités
-            EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
-            Patient patient = em.find(Patient.class, patientId);
-            MedecinGeneraliste generaliste = em.find(MedecinGeneraliste.class, generalisteId);
-            em.close();
-
-            if (patient == null || generaliste == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Ressources non trouvées.");
-                return;
+            if (patientIdParam != null && !patientIdParam.isEmpty()) {
+                patientId = Long.parseLong(patientIdParam);
             }
 
-            // 2. Création initiale de la consultation
-            Consultation consultation = new Consultation();
-            consultation.setPatient(patient);
-            consultation.setGeneraliste(generaliste);
+            Long generalisteId = (Long) request.getSession().getAttribute("utilisateurId");
+            String action = request.getParameter("action");
+            String consultationIdParam = request.getParameter("consultationId");
+
+            // 1. Charger/Initialiser la consultation
+            EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+            Consultation consultation;
+
+            if (consultationIdParam != null && !consultationIdParam.isEmpty()) {
+                // Cas 1: Édition
+                consultation = em.find(Consultation.class, Long.parseLong(consultationIdParam));
+                if (consultation == null) throw new RuntimeException("Consultation introuvable.");
+            } else {
+                // Cas 2: Nouvelle création
+                consultation = new Consultation();
+                Patient patient = em.find(Patient.class, patientId);
+                MedecinGeneraliste generaliste = em.find(MedecinGeneraliste.class, generalisteId);
+
+                if (patient == null || generaliste == null) {
+                    throw new RuntimeException("Ressources Patient/Généraliste non trouvées.");
+                }
+                consultation.setPatient(patient);
+                consultation.setGeneraliste(generaliste);
+            }
+            // IMPORTANT : NE PAS FERMER EM ICI si les entités doivent être utilisées.
+            // Le DAO ouvrira et fermera sa propre transaction.
+            em.close();
+
+
+            // 2. Mettre à jour les données du formulaire
             consultation.setMotif(request.getParameter("motif"));
             consultation.setObservations(request.getParameter("observations"));
-
-            // 3. Gestion des Actes Techniques (Simplifié - Nécessite un ActeTechniqueDao.findAll())
-            // Actes non gérés dans ce POST initial, seront ajoutés plus tard.
             consultation.setActes(Collections.emptyList());
 
-            // 4. Clôture (Scénario A)
+            // 3. Gestion des Actions (Sauvegarde ou Clôture)
             if ("cloturer".equals(action)) {
+                // Scénario A: Clôture
                 consultation.setDiagnostic(request.getParameter("diagnostic"));
                 consultation.setPrescription(request.getParameter("prescription"));
                 consultation.setStatut(ConsultationStatutEnum.TERMINEE);
-                // Le coût sera calculé dans le DAO ou Service après liaison des actes
 
-                consultationDao.save(consultation);
-
-                // Succès: Retour au tableau de bord
-                response.sendRedirect(request.getContextPath() + "/generaliste/dashboard?message=Consultation clôturée avec succès (Scénario A).");
+                consultation = consultationDao.save(consultation); // Mise à jour de l'objet
+                response.sendRedirect(request.getContextPath() + "/generaliste/dashboard?message=Consultation clôturée (TERMINEE).");
                 return;
 
-            } else if ("save".equals(action)) {
-                // Sauvegarde simple (statut EN_COURS_DE_TRAITEMENT)
+            } else if ("sauvegarder".equals(action)) {
+                // Sauvegarde simple (mode brouillon/édition)
                 consultation.setStatut(ConsultationStatutEnum.EN_COURS_DE_TRAITEMENT);
-                consultationDao.save(consultation);
+                consultation = consultationDao.save(consultation); // Mise à jour de l'objet avec l'ID généré
 
-                // Redirection vers l'édition de la consultation sauvée
-                response.sendRedirect(request.getContextPath() + "/generaliste/editer_consultation?consultationId=" + consultation.getId());
+                // CORRECTION : Redirection vers la même Servlet en mode ÉDITION
+                response.sendRedirect(request.getContextPath() + "/generaliste/creer_consultation?consultationId=" + consultation.getId());
                 return;
             }
 
         } catch (Exception e) {
-            request.setAttribute("error", "Erreur lors de la gestion de la consultation: " + e.getMessage());
-            request.getRequestDispatcher("/WEB-INF/generaliste/consultation_form.jsp").forward(request, response);
+            // Afficher l'erreur et revenir au formulaire
+            String encodedError = URLEncoder.encode("Erreur critique lors de l'action: " + e.getMessage(), StandardCharsets.UTF_8.toString());
+            e.printStackTrace();
+
+            // Rediriger vers l'URL correcte en cas d'échec
+            if (patientId != null) {
+                // Si on a l'ID patient, on retourne à la page de création/édition
+                response.sendRedirect(request.getContextPath() + "/generaliste/creer_consultation?patientId=" + patientId + "&error=" + encodedError);
+            } else {
+                // Sinon, on retourne à la liste
+                response.sendRedirect(request.getContextPath() + "/generaliste/liste_patients?error=" + encodedError);
+            }
+            return;
         }
     }
 }
