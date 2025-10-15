@@ -21,5 +21,5 @@ public enum ConsultationStatutEnum {
      * Scénario B : Le Généraliste a besoin de l'avis d'un Spécialiste et a soumis une demande.
      * La consultation reste ouverte.
      */
-    EN_ATTENTE_CONSULTATION
+    EN_ATTENTE_AVIS_SPECIALISTE
 }
