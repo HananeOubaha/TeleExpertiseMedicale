@@ -17,5 +17,19 @@ public class MedecinSpecialiste extends Utilisateur {
     @Column(name = "tarif_consultation")
     private double tarifConsultation;
 
-    // --- Getters et Setters (incluant ceux pour specialite et tarifConsultation) ---
+    public SpecialiteEnum getSpecialite() {
+        return specialite;
+    }
+
+    public void setSpecialite(SpecialiteEnum specialite) { // Mettre à jour la spécialité
+        this.specialite = specialite;
+    }
+
+    public double getTarifConsultation() {
+        return tarifConsultation;
+    }
+
+    public void setTarifConsultation(double tarifConsultation) { // Mettre à jour le tarif
+        this.tarifConsultation = tarifConsultation;
+    }
 }
