@@ -32,8 +32,8 @@ public class SpecialisteService {
      */
     public void genererCreneaux(MedecinSpecialiste specialist) {
 
-        // Supprimer d'abord tous les créneaux existants (si implémenté dans CreneauDao)
-        // creneauDao.deleteAllBySpecialisteId(specialist.getId());
+//         Supprimer d'abord tous les créneaux existants (si implémenté dans CreneauDao)
+         creneauDao.deleteAllBySpecialisteId(specialist.getId());
 
         LocalDateTime now = LocalDateTime.now();
         LocalTime startTime = LocalTime.of(9, 0);

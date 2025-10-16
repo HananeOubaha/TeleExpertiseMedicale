@@ -2,6 +2,9 @@ package com.teleexpertise.model.dao;
 
 import com.teleexpertise.model.entities.Creneau;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery; // Ajouté pour la requête SELECT
+import jakarta.persistence.Query; // Ajouté pour la requête DELETE
+import java.util.List;
 
 public class CreneauDao {
 
@@ -12,7 +15,6 @@ public class CreneauDao {
         EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
-            // Utilise persist pour un nouvel objet
             em.persist(creneau);
             em.getTransaction().commit();
         } catch (Exception e) {
@@ -28,10 +30,55 @@ public class CreneauDao {
     }
 
     /**
-     * Supprime tous les créneaux futurs pour un spécialiste donné (pour la réinitialisation).
+     * US-SPE-1: Supprime tous les créneaux existants pour un spécialiste donné.
      */
     public void deleteAllBySpecialisteId(Long specialistId) {
-        // Cette méthode sera utile si un spécialiste veut réinitialiser ses disponibilités
-        // (Implémentation omise ici pour se concentrer sur l'US, mais nécessaire en production).
+        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+
+        try {
+            em.getTransaction().begin();
+
+            Query query = em.createQuery(
+                    "DELETE FROM Creneau c WHERE c.specialiste.id = :specialistId");
+            query.setParameter("specialistId", specialistId);
+            query.executeUpdate();
+
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            System.err.println("Erreur DAO lors de la suppression des créneaux : " + e.getMessage());
+            throw new RuntimeException("Erreur lors de la réinitialisation des disponibilités.", e);
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * US6: Récupère la liste des créneaux pour un spécialiste, triés par date/heure.
+     * @param specialistId L'ID du spécialiste.
+     * @return Liste de tous les créneaux.
+     */
+    public List<Creneau> findCreneauxBySpecialisteId(Long specialistId) {
+        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        List<Creneau> creneaux = null;
+
+        try {
+            // JPQL: Jointure FETCH pour charger la consultation associée (si réservé)
+            TypedQuery<Creneau> query = em.createQuery(
+                    "SELECT c FROM Creneau c " +
+                            "LEFT JOIN FETCH c.consultationAssociee ca " + // Charge la consultation si elle existe
+                            "WHERE c.specialiste.id = :specialistId " +
+                            "ORDER BY c.heureDebut ASC", Creneau.class);
+
+            query.setParameter("specialistId", specialistId);
+            creneaux = query.getResultList();
+        } catch (Exception e) {
+            System.err.println("Erreur DAO lors de la récupération des créneaux : " + e.getMessage());
+        } finally {
+            em.close();
+        }
+        return creneaux;
     }
 }
