@@ -1,5 +1,7 @@
 package com.teleexpertise.model.web;
 
+import com.teleexpertise.model.dao.ConsultationDao; // NOUVEL IMPORT
+import com.teleexpertise.model.entities.Consultation; // NOUVEL IMPORT
 import com.teleexpertise.model.entities.MedecinSpecialiste;
 import com.teleexpertise.model.enums.RoleEnum;
 import com.teleexpertise.model.enums.SpecialiteEnum;
@@ -17,6 +19,7 @@ import java.util.List;
 public class SpecialisteSearchServlet extends HttpServlet {
 
     private final GeneralisteService generalisteService = new GeneralisteService();
+    private final ConsultationDao consultationDao = new ConsultationDao(); // Ajout du DAO
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -31,7 +34,14 @@ public class SpecialisteSearchServlet extends HttpServlet {
         try {
             Long consultationId = Long.parseLong(request.getParameter("consultationId"));
 
-            // Récupérer le filtre de spécialité sélectionné par l'utilisateur
+            // 2. Charger la consultation (pour l'afficher dans la JSP)
+            Consultation consultation = consultationDao.findById(consultationId);
+            if (consultation == null) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Consultation introuvable.");
+                return;
+            }
+
+            // 3. Récupérer le filtre de spécialité sélectionné
             String selectedSpec = request.getParameter("specialite");
             SpecialiteEnum specialiteFiltre = null;
             List<MedecinSpecialiste> specialists = null;
@@ -43,7 +53,8 @@ public class SpecialisteSearchServlet extends HttpServlet {
                 specialists = generalisteService.findSpecialistes(specialiteFiltre);
             }
 
-            // Passer les données à la JSP
+            // 4. Passer les données à la JSP
+            request.setAttribute("consultation", consultation); // Passer l'objet Consultation complet
             request.setAttribute("consultationId", consultationId);
             request.setAttribute("specialities", Arrays.asList(SpecialiteEnum.values()));
             request.setAttribute("specialists", specialists);
@@ -53,6 +64,7 @@ public class SpecialisteSearchServlet extends HttpServlet {
 
         } catch (Exception e) {
             request.setAttribute("error", "Erreur lors du chargement des spécialistes: " + e.getMessage());
+            e.printStackTrace();
             request.getRequestDispatcher("/WEB-INF/generaliste/consultation_form.jsp").forward(request, response);
         }
     }

@@ -48,5 +48,29 @@ public class DemandeExpertiseDao {
         return demandes;
     }
 
-    // ... (Méthode save sera nécessaire pour US8)
+    public DemandeExpertise save(DemandeExpertise demande) {
+        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            em.getTransaction().begin();
+
+            // Persist pour garantir la génération de l'ID
+            if (demande.getId() == null) {
+                em.persist(demande);
+                em.flush(); // Force l'insertion pour obtenir l'ID
+            } else {
+                demande = em.merge(demande);
+            }
+
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            System.err.println("Erreur DAO lors de la sauvegarde de la demande : " + e.getMessage());
+            throw new RuntimeException("Erreur de persistance de la demande d'expertise.", e);
+        } finally {
+            em.close();
+        }
+        return demande;
+    }
 }

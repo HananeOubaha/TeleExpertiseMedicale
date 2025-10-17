@@ -1,30 +1,55 @@
 package com.teleexpertise.model.dao;
 
 import com.teleexpertise.model.entities.Consultation;
+// AJOUT DES IMPORTS JPA MANQUANTS
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.TypedQuery;
 
 public class ConsultationDao {
 
     /**
-     * Persiste une nouvelle consultation ou met à jour une consultation existante.
-     * Utilise persist/flush pour la création afin de garantir que l'ID est généré
-     * et disponible immédiatement pour la redirection.
-     * * @param consultation L'objet Consultation à sauvegarder.
-     * @return La Consultation sauvegardée avec son ID mis à jour.
+     * Recherche une Consultation par son ID et CHARGE le Patient (Eager Fetch).
+     */
+    public Consultation findById(Long id) {
+        // NOTE: JpaUtil est accessible via com.teleexpertise.dao
+        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        Consultation consultation = null;
+
+        try {
+            // JPQL avec JOIN FETCH pour forcer le chargement du Patient (résout LazyInitializationException)
+            TypedQuery<Consultation> query = em.createQuery(
+                    "SELECT c FROM Consultation c JOIN FETCH c.patient p WHERE c.id = :id", Consultation.class);
+            query.setParameter("id", id);
+
+            consultation = query.getSingleResult();
+
+        } catch (NoResultException e) {
+            return null;
+        } catch (Exception e) {
+            System.err.println("Erreur DAO lors de la recherche de la consultation par ID avec FETCH : " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+        return consultation;
+    }
+
+    /**
+     * Persiste ou met à jour une consultation.
      */
     public Consultation save(Consultation consultation) {
-        // NOTE: JpaUtil est accessible via com.teleexpertise.dao
         EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
 
         try {
             em.getTransaction().begin();
 
             if (consultation.getId() == null) {
-                // Création d'une nouvelle entité (garantit la génération de l'ID)
+                // Création (garantit la génération de l'ID pour la redirection)
                 em.persist(consultation);
-                em.flush(); // Force l'exécution de l'INSERT et la récupération de l'ID
+                em.flush();
             } else {
-                // Mise à jour d'une entité existante
+                // Mise à jour
                 consultation = em.merge(consultation);
             }
 
