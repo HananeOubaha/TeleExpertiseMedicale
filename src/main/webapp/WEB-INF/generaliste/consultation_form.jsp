@@ -89,6 +89,32 @@
     <button type="submit" name="action" value="sauvegarder">Sauvegarder et Continuer (non clôturée)</button>
 
 </form>
+<hr>
 
+<h2>4. Demande d'Expertise (Scénario B)</h2>
+
+<c:if test="${not empty consultation.id}">
+    <p>Si la situation nécessite un avis spécialisé :</p>
+
+    <form method="GET" action="${pageContext.request.contextPath}/generaliste/rechercher_specialiste">
+        <input type="hidden" name="consultationId" value="${consultation.id}">
+
+        <label for="specialite_requise">Sélectionner la Spécialité requise :</label>
+        <select id="specialite_requise" name="specialite" required>
+            <option value="">-- Choisir une Spécialité --</option>
+                <%-- US-GEN-3: Liste des spécialités (à passer via le GET de la Servlet) --%>
+            <option value="CARDIOLOGUE">Cardiologue</option>
+            <option value="PNEUMOLOGUE">Pneumologue</option>
+            <option value="DERMATOLOGUE">Dermatologue</option>
+        </select>
+
+        <button type="submit" name="action" value="chercher_specialiste">Rechercher Spécialiste</button>
+    </form>
+</c:if>
+<c:if test="${empty consultation.id}">
+    <p>Veuillez sauvegarder la consultation au moins une fois pour demander un avis spécialiste.</p>
+</c:if>
+
+```
 </body>
 </html>
