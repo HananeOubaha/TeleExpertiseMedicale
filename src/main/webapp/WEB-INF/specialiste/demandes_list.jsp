@@ -56,7 +56,9 @@
                     <td>${demande.consultation.patient.nom} ${demande.consultation.patient.prenom}</td>
                     <td>${demande.priorite}</td>
                     <td>${demande.statut}</td>
-                    <td><fmt:formatDate value="${demande.dateDemande}" pattern="dd/MM/yy HH:mm"/></td>
+                    <td>
+                        <fmt:formatDate value="${demande.dateDemandeUtil}" pattern="dd/MM/yy HH:mm"/>
+                    </td>
                     <td>
                         <a href="${pageContext.request.contextPath}/specialiste/repondre_expertise?demandeId=${demande.id}">
                             Consulter / Répondre

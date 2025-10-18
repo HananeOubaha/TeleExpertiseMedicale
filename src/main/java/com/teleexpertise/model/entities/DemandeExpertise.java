@@ -4,6 +4,8 @@ import com.teleexpertise.model.enums.PrioriteEnum;
 import com.teleexpertise.model.enums.ConsultationStatutEnum;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneId; // NOUVEL IMPORT
+import java.util.Date;
 
 @Entity
 @Table(name = "demande_expertise")
@@ -119,5 +121,13 @@ public class DemandeExpertise {
 
     public void setDateDemande(LocalDateTime dateDemande) {
         this.dateDemande = dateDemande;
+    }
+
+    public Date getDateDemandeUtil() {
+        if (this.dateDemande == null) {
+            // Retourne l'heure actuelle si la date est null (pour éviter NullPointerException)
+            return Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant());
+        }
+        return Date.from(this.dateDemande.atZone(ZoneId.systemDefault()).toInstant());
     }
 }

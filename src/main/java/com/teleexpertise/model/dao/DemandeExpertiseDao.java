@@ -73,4 +73,32 @@ public class DemandeExpertiseDao {
         }
         return demande;
     }
+    /**
+     * US8: Récupère une DemandeExpertise par son ID (pour consultation/réponse).
+     * @param id L'ID de la demande.
+     * @return La DemandeExpertise chargée.
+     */
+    public DemandeExpertise findById(Long id) {
+        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        DemandeExpertise demande = null;
+
+        try {
+            // CORRECTION CRITIQUE : Ajout de JOIN FETCH pour charger les Signes Vitaux (résoud le Lazy Loading dans US8)
+            TypedQuery<DemandeExpertise> query = em.createQuery(
+                    "SELECT d FROM DemandeExpertise d " +
+                            "JOIN FETCH d.consultation c " +
+                            "JOIN FETCH c.patient p " +
+                            "LEFT JOIN FETCH p.signesVitauxList svl " + // NOUVEAU : Chargement des Signes Vitaux
+                            "WHERE d.id = :id", DemandeExpertise.class);
+            query.setParameter("id", id);
+
+            demande = query.getSingleResult();
+        } catch (Exception e) {
+            System.err.println("Erreur DAO lors de la recherche de la demande par ID : " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+        return demande;
+    }
 }

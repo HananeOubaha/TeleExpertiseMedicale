@@ -56,8 +56,9 @@ public class DemandeListServlet extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/specialiste/demandes_list.jsp").forward(request, response);
 
         } catch (Exception e) {
-            request.setAttribute("error", "Erreur lors du chargement des demandes: " + e.getMessage());
-            request.getRequestDispatcher("/WEB-INF/specialiste/dashboard_spec.jsp").forward(request, response);
+            throw new ServletException("Erreur de chargement des demandes US7: " + e.getMessage(), e);
+//            request.setAttribute("error", "Erreur lors du chargement des demandes: " + e.getMessage());
+//            request.getRequestDispatcher("/WEB-INF/specialiste/dashboard_spec.jsp").forward(request, response);
         }
     }
 }
