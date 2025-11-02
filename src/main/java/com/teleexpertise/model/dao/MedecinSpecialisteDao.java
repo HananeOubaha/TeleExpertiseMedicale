@@ -16,7 +16,7 @@ public class MedecinSpecialisteDao {
      */
     public MedecinSpecialiste findById(Long id) {
         // NOTE : JpaUtil est accessible via com.teleexpertise.dao
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         MedecinSpecialiste specialist = em.find(MedecinSpecialiste.class, id);
         em.close();
         return specialist;
@@ -28,7 +28,7 @@ public class MedecinSpecialisteDao {
      * @return Liste de tous les Spécialistes.
      */
     public List<MedecinSpecialiste> findAll() {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         List<MedecinSpecialiste> specialists = null;
 
         try {
@@ -50,7 +50,7 @@ public class MedecinSpecialisteDao {
      * @return L'objet mis à jour.
      */
     public MedecinSpecialiste save(MedecinSpecialiste specialist) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
 
         try {
             em.getTransaction().begin();

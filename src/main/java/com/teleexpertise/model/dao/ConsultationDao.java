@@ -13,7 +13,7 @@ public class ConsultationDao {
      */
     public Consultation findById(Long id) {
         // NOTE: JpaUtil est accessible via com.teleexpertise.dao
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         Consultation consultation = null;
 
         try {
@@ -39,7 +39,7 @@ public class ConsultationDao {
      * Persiste ou met à jour une consultation.
      */
     public Consultation save(Consultation consultation) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
 
         try {
             em.getTransaction().begin();

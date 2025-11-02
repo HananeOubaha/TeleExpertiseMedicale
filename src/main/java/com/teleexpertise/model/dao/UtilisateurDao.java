@@ -14,7 +14,7 @@ public class UtilisateurDao {
      * @return L'objet Utilisateur correspondant, ou null si non trouvé.
      */
     public Utilisateur trouverParEmail(String email) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         Utilisateur utilisateur = null;
 
         try {

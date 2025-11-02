@@ -1,4 +1,4 @@
-package com.teleexpertise.dao;
+package com.teleexpertise.model.dao;
 
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;

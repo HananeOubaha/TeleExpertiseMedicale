@@ -15,7 +15,7 @@ public class DemandeExpertiseDao {
      * @return Liste des demandes triées par priorité et date.
      */
     public List<DemandeExpertise> findBySpecialisteAndStatut(Long specialistId, ConsultationStatutEnum statut) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         List<DemandeExpertise> demandes = null;
 
         // Requête JPQL
@@ -49,7 +49,7 @@ public class DemandeExpertiseDao {
     }
 
     public DemandeExpertise save(DemandeExpertise demande) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
 
@@ -79,7 +79,7 @@ public class DemandeExpertiseDao {
      * @return La DemandeExpertise chargée.
      */
     public DemandeExpertise findById(Long id) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         DemandeExpertise demande = null;
 
         try {

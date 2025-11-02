@@ -1,6 +1,6 @@
 package com.teleexpertise.web;
 
-import com.teleexpertise.dao.JpaUtil;
+import com.teleexpertise.model.dao.JpaUtil;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;

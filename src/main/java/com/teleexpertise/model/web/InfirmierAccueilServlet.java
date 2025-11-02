@@ -22,7 +22,7 @@ public class InfirmierAccueilServlet extends HttpServlet {
 
         // Initialisation de JPA forcée pour garantir que la Factory est ouverte
         // (Bien que le ContextListener doive le faire, ceci renforce la stabilité)
-        com.teleexpertise.dao.JpaUtil.getEntityManagerFactory();
+        com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory();
 
         // (Sécurité simple - sera améliorée avec un Filter)
         if (!RoleEnum.INFIRMIER.equals(request.getSession().getAttribute("utilisateurRole"))) {

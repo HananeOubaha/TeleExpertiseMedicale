@@ -12,7 +12,7 @@ public class CreneauDao {
      * Persiste un nouveau créneau.
      */
     public Creneau save(Creneau creneau) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         try {
             em.getTransaction().begin();
             em.persist(creneau);
@@ -33,7 +33,7 @@ public class CreneauDao {
      * US-SPE-1: Supprime tous les créneaux existants pour un spécialiste donné.
      */
     public void deleteAllBySpecialisteId(Long specialistId) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
 
         try {
             em.getTransaction().begin();
@@ -61,7 +61,7 @@ public class CreneauDao {
      * @return Liste de tous les créneaux.
      */
     public List<Creneau> findCreneauxBySpecialisteId(Long specialistId) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         List<Creneau> creneaux = null;
 
         try {

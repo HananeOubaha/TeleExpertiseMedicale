@@ -46,7 +46,7 @@ public class ConsultationCreationServlet extends HttpServlet {
             return;
         }
 
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         Patient patient = null;
         Consultation consultation = null;
 
@@ -119,7 +119,7 @@ public class ConsultationCreationServlet extends HttpServlet {
             String consultationIdParam = request.getParameter("consultationId");
 
             // 1. Charger/Initialiser la consultation
-            EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+            EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
             Consultation consultation;
 
             if (consultationIdParam != null && !consultationIdParam.isEmpty()) {
@@ -150,7 +150,7 @@ public class ConsultationCreationServlet extends HttpServlet {
                         .map(Long::parseLong)
                         .map(acteId -> {
                             // Nécessite un findById simple (pas de service ici pour éviter un nouveau EM)
-                            EntityManager tempEm = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+                            EntityManager tempEm = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
                             ActeTechnique acte = tempEm.find(ActeTechnique.class, acteId);
                             tempEm.close();
                             return acte;

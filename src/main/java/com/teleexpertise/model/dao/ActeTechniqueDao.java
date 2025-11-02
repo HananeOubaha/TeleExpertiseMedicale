@@ -12,7 +12,7 @@ public class ActeTechniqueDao {
      * @return Liste de tous les Actes Techniques.
      */
     public List<ActeTechnique> findAll() {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         List<ActeTechnique> actes = null;
 
         try {
@@ -31,7 +31,7 @@ public class ActeTechniqueDao {
      * Récupère un Acte Technique par son ID.
      */
     public ActeTechnique findById(Long id) {
-        EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+        EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
         ActeTechnique acte = em.find(ActeTechnique.class, id);
         em.close();
         return acte;

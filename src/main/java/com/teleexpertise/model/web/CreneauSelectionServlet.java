@@ -49,7 +49,7 @@ public class CreneauSelectionServlet extends HttpServlet {
             MedecinSpecialiste specialist = specialistDao.findById(specialistId);
 
             // 2. Charger les créneaux disponibles (filtrer ceux qui ne sont pas passés et sont disponibles)
-            EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+            EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
             List<Creneau> creneaux = em.createQuery(
                             "SELECT c FROM Creneau c WHERE c.specialiste.id = :specId AND c.estDisponible = TRUE AND c.heureDebut > CURRENT_TIMESTAMP ORDER BY c.heureDebut ASC", Creneau.class)
                     .setParameter("specId", specialistId)
@@ -104,7 +104,7 @@ public class CreneauSelectionServlet extends HttpServlet {
             // 3. Gérer le Créneau (Si Synchrone)
             if (creneauId != null) {
                 // Charger le Créneau pour le marquer comme réservé
-                EntityManager em = com.teleexpertise.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
+                EntityManager em = com.teleexpertise.model.dao.JpaUtil.getEntityManagerFactory().createEntityManager();
                 Creneau creneau = em.find(Creneau.class, creneauId);
                 em.close();
 

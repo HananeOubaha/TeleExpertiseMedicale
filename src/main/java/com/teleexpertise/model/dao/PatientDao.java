@@ -4,7 +4,7 @@ import com.teleexpertise.model.entities.Patient;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
-import com.teleexpertise.dao.JpaUtil;
+import com.teleexpertise.model.dao.JpaUtil;
 import java.util.List;
 
 public class PatientDao {

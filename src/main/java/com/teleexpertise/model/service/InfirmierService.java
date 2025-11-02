@@ -54,4 +54,10 @@ public class InfirmierService {
         return tousLesPatients; // Le tri est déjà effectué par le DAO
     }
 
+//    public List<Patient> getPatientDujour(){
+//        List<Patient> patients=patientDao.findAllOrderByArrivalTime() ;
+//                 patients.stream()
+//                         .filter(patient -> )
+//
+//    }
 }
